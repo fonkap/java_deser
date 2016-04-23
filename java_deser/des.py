@@ -3,26 +3,14 @@ Java deserializer
 adapted from StackOverflow response: http://stackoverflow.com/a/16470856/3324704
 """
 import StringIO
-import struct
 
 from object_stream_constants import *
-
-h = lambda s: ' '.join('%.2X' % ord(x) for x in s)  # format as hex
-p = lambda s: (struct.unpack('>b', s)[0] if len(s) == 1 else
-               struct.unpack('>h', s)[0] if len(s) == 2 else
-               struct.unpack('>l', s)[0] if len(s) == 4 else
-               struct.unpack('>q', s)[0])
-
-
-# p = lambda s: sum(ord(x) * 256 ** i for i, x in enumerate(reversed(s)))  # parse integer
-def read_string(f):
-    l = p(f.read(2))
-    dat = f.read(l)
-    str = dat.decode('utf-8')
-    return str
+from tool import *
 
 
 #TCPEndpoint.readHostPortFormat line 581
+
+
 def parse_tcp_endpoint_hp(f):
     obj = {'_cls': {
         'fields': [('host', 'L', 'String;'), ('port', 'I', '')],
@@ -38,7 +26,7 @@ def parse_tcp_endpoint_hp(f):
 
 #UID.read line 263
 def parse_uid(f):
-    obj = {'_cls': {'fields': [['count', 'S', ''], ['time', 'J', ''], ['unique', 'I', '']], '_uid': 1086053664494604050L, 'flags': '\x02', 'parent': None, '_name': 'java.rmi.server.UID'}}
+    obj = {'_cls': {'fields': [['count', 'S', ''], ['time', 'J', ''], ['unique', 'I', '']], '_uid': 1086053664494604050, 'flags': '\x02', 'parent': None, '_name': 'java.rmi.server.UID'}}
     obj['_name'] = obj['_cls']['_name']
     obj['unique'] = p(f.read(4))
     obj['time'] = p(f.read(8))
@@ -51,7 +39,7 @@ def parse_objid(f):
     obj = {'_cls': {
         'fields': [('objNum', 'J', ''), ('space', 'L', 'Ljava/rmi/server/UID;')],
         '_name': 'java.rmi.server.ObjID',
-        '_uid': 12060351809741186396L,
+        '_uid': -6386392263968365220,
         'flags': '\x02',
         'parent': None,
     }}
@@ -152,7 +140,7 @@ class Deserializer:
             cls['parent'] = self.parse_obj()
             return cls
         # TC_OBJECT
-        assert b == TC_OBJECT, (h(b), h(f.read(4)), repr(f.read(50)))
+        assert b == TC_OBJECT, h(b)
         obj = {}
         obj['_cls'] = self.parse_obj()
         obj['_name'] = obj['_cls']['_name']

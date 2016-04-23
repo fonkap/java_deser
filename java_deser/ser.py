@@ -3,23 +3,11 @@ import struct
 
 from object_stream_constants import *
 
-h = lambda s: ' '.join('%.2X' % ord(x) for x in s)  # format as hex
-p = lambda s: sum(ord(x) * 256 ** i for i, x in enumerate(reversed(s)))  # parse integer
-q = lambda s,l: (struct.pack('>b', s) if l == 1 else
-                 struct.pack('>h', s) if l == 2 else
-                 struct.pack('>l', s) if l == 4 else
-                 struct.pack('>q', s))
-
-read_string = lambda f: f.read(p(f.read(2))).decode('utf-8')
-
-
-def write_string(f, s):
-    ba = s.encode('utf-8')
-    f.write(q(len(ba), 2))
-    f.write(ba)
-
 
 # TCPEndpoint.readHostPortFormat line 581
+from tool import *
+
+
 def serial_tcp_endpoint_hp(f, obj):
     write_string(f, obj['host'])
     f.write(q(obj['port'], 4))
@@ -78,6 +66,7 @@ class Serializer:
         if obj is None:
             f.write(TC_NULL)
         else:
+
             if not self.try_serial_handle('TC_CLASSDESC', obj):
                 f.write(TC_CLASSDESC)
                 write_string(f, obj['_name'])
@@ -200,8 +189,8 @@ class Serializer:
     def write_int(self, value):
         self.buffer += q(value, 4)
 
-    def write_long(self, value):
-        self.buffer += q(value, 8)
+    def write_ulong(self, value):
+        self.buffer += qu(value, 8)
 
     def flush_buffer(self):
         if len(self.buffer) > 0:
